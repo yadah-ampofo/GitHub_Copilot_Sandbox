@@ -3,36 +3,59 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Shopping App</title>
+    <title>Fruit Shop - Online Shopping</title>
     <link rel="stylesheet" href="styles.css">
 </head>
 <body>
     <div id="app">
+        <!-- Navigation Bar with Expanded/Collapsed Views -->
         <nav id="navbar">
             <ul>
-                <li><a href="#products">Products</a></li>
-                <li><a href="#cart">Shopping Cart</a></li>
-                <li><a href="#checkout">Checkout</a></li>
+                <li><a href="#products" data-expanded="Products" data-collapsed="Pr">Products</a></li>
+                <li><a href="#product-details" data-expanded="ProductDetails" data-collapsed="PD">Product Details</a></li>
+                <li><a href="#cart" data-expanded="Shopping Cart" data-collapsed="SC">Shopping Cart</a></li>
+                <li><a href="#checkout" data-expanded="Checkout" data-collapsed="CO">Checkout</a></li>
             </ul>
         </nav>
+
         <main>
+            <!-- Products Section -->
             <section id="products">
                 <h1>Products</h1>
-                <div id="product-list"></div>
+                <p class="section-description">Browse our fresh fruit selection</p>
+                <div id="product-list" class="product-grid"></div>
             </section>
+
+            <!-- Product Details Section -->
+            <section id="product-details" style="display: none;">
+                <h1>Product Details</h1>
+                <div id="product-details-content"></div>
+            </section>
+
+            <!-- Shopping Cart Section -->
             <section id="cart" style="display: none;">
                 <h1>Shopping Cart</h1>
-                <div id="cart-items"></div>
-                <p id="cart-total"></p>
-                <button id="proceed-to-checkout">Proceed to Checkout</button>
+                <div id="cart-items" class="cart-container"></div>
+                <div id="cart-total" class="cart-total-section"></div>
+                <button id="proceed-to-checkout" class="btn-proceed">Proceed to Checkout</button>
             </section>
+
+            <!-- Checkout Section -->
             <section id="checkout" style="display: none;">
                 <h1>Checkout</h1>
-                <div id="order-summary"></div>
-                <button id="process-order">Process Order</button>
+                <p class="section-description">Review your order before processing</p>
+                <div id="order-summary" class="checkout-container"></div>
+                <button id="process-order" class="btn-process">Process Order</button>
+                <button class="btn-back-to-cart" onclick="navigateTo('cart')">Back to Cart</button>
             </section>
         </main>
+
+        <!-- Footer -->
+        <footer>
+            <p>&copy; 2026 Fruit Shop. All rights reserved.</p>
+        </footer>
     </div>
+
     <script src="script.js"></script>
 </body>
 </html>
