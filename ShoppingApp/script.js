@@ -12,7 +12,28 @@ const products = [
 ];
 
 const cart = [];
+let currentSelectedProduct = null;
 
+// ========== NAVIGATION MANAGEMENT ==========
+function navigateTo(section) {
+    document.getElementById("products").style.display = "none";
+    document.getElementById("product-details").style.display = "none";
+    document.getElementById("cart").style.display = "none";
+    document.getElementById("checkout").style.display = "none";
+    document.getElementById(section).style.display = "block";
+    updateNavbarActive(section);
+}
+
+function updateNavbarActive(section) {
+    document.querySelectorAll("nav a").forEach(link => {
+        link.classList.remove("active");
+        if (link.getAttribute("href") === `#${section}`) {
+            link.classList.add("active");
+        }
+    });
+}
+
+// ========== PRODUCTS SECTION ==========
 function renderProducts() {
     const productList = document.getElementById("product-list");
     productList.innerHTML = "";
@@ -20,70 +41,197 @@ function renderProducts() {
         const productCard = document.createElement("div");
         productCard.className = "product-card";
         productCard.innerHTML = `
-            <h2>${product.emoji} ${product.name}</h2>
-            <p>${product.description}</p>
-            <p>$${product.price.toFixed(2)} ${product.unit}</p>
-            <button onclick="addToCart(${product.id})">Add to Cart</button>
+            <div class="product-emoji">${product.emoji}</div>
+            <h3>${product.name}</h3>
+            <p class="product-description">${product.description}</p>
+            <p class="product-price">$${product.price.toFixed(2)} <span>${product.unit}</span></p>
+            <div class="product-actions">
+                <button class="btn-primary" onclick="viewProductDetails(${product.id})">View Details</button>
+                <button class="btn-secondary" onclick="addToCart(${product.id}, 1)">Add to Cart</button>
+            </div>
         `;
         productList.appendChild(productCard);
     });
 }
 
-function addToCart(productId) {
+// ========== PRODUCT DETAILS SECTION ==========
+function viewProductDetails(productId) {
+    currentSelectedProduct = products.find(p => p.id === productId);
+    renderProductDetails();
+    navigateTo("product-details");
+}
+
+function renderProductDetails() {
+    if (!currentSelectedProduct) return;
+    
+    const detailsContainer = document.getElementById("product-details-content");
+    detailsContainer.innerHTML = `
+        <div class="product-detail-card">
+            <div class="detail-emoji">${currentSelectedProduct.emoji}</div>
+            <h1>${currentSelectedProduct.name}</h1>
+            <p class="detail-description">${currentSelectedProduct.description}</p>
+            <p class="detail-price">$${currentSelectedProduct.price.toFixed(2)} <span>${currentSelectedProduct.unit}</span></p>
+            <div class="quantity-selector">
+                <label for="detail-quantity">Quantity:</label>
+                <input type="number" id="detail-quantity" min="1" value="1" />
+            </div>
+            <div class="detail-actions">
+                <button class="btn-primary" onclick="addToCartFromDetails()">Add to Cart</button>
+                <button class="btn-secondary" onclick="navigateTo('products')">Back to Products</button>
+            </div>
+        </div>
+    `;
+}
+
+function addToCartFromDetails() {
+    const quantity = parseInt(document.getElementById("detail-quantity").value) || 1;
+    if (quantity > 0) {
+        addToCart(currentSelectedProduct.id, quantity);
+        alert(`${currentSelectedProduct.name} (Qty: ${quantity}) added to cart!`);
+        navigateTo("products");
+    }
+}
+
+// ========== SHOPPING CART SECTION ==========
+function addToCart(productId, quantity = 1) {
     const product = products.find(p => p.id === productId);
+    if (!product) return;
+    
     const cartItem = cart.find(item => item.id === productId);
     if (cartItem) {
-        cartItem.quantity++;
+        cartItem.quantity += quantity;
     } else {
-        cart.push({ ...product, quantity: 1 });
+        cart.push({ ...product, quantity });
     }
-    alert(`${product.name} added to cart!`);
 }
 
 function renderCart() {
     const cartItems = document.getElementById("cart-items");
     const cartTotal = document.getElementById("cart-total");
+    const proceedBtn = document.getElementById("proceed-to-checkout");
+    
     cartItems.innerHTML = "";
+    
+    if (cart.length === 0) {
+        cartItems.innerHTML = "<p class='empty-cart'>Your cart is empty. <a href='#products' onclick='navigateTo(\"products\")'>Continue Shopping</a></p>";
+        proceedBtn.disabled = true;
+        proceedBtn.classList.add("disabled");
+        cartTotal.textContent = "Grand Total: $0.00";
+        return;
+    }
+    
+    proceedBtn.disabled = false;
+    proceedBtn.classList.remove("disabled");
     let total = 0;
-    cart.forEach(item => {
+    
+    cart.forEach((item, index) => {
+        const itemTotal = item.price * item.quantity;
         const cartItem = document.createElement("div");
         cartItem.className = "cart-item";
         cartItem.innerHTML = `
-            <h2>${item.emoji} ${item.name}</h2>
-            <p>Quantity: ${item.quantity}</p>
-            <p>Total: $${(item.price * item.quantity).toFixed(2)}</p>
+            <div class="cart-item-header">
+                <h3>${item.emoji} ${item.name}</h3>
+                <button class="btn-remove" onclick="removeFromCart(${index})" title="Remove item">✕</button>
+            </div>
+            <p class="cart-item-price">$${item.price.toFixed(2)} ${item.unit}</p>
+            <div class="cart-item-controls">
+                <label for="qty-${index}">Qty:</label>
+                <input type="number" id="qty-${index}" min="1" value="${item.quantity}" onchange="updateCartQuantity(${index}, this.value)" />
+            </div>
+            <p class="cart-item-total">Subtotal: <strong>$${itemTotal.toFixed(2)}</strong></p>
         `;
         cartItems.appendChild(cartItem);
-        total += item.price * item.quantity;
+        total += itemTotal;
     });
-    cartTotal.textContent = `Grand Total: $${total.toFixed(2)}`;
+    
+    cartTotal.innerHTML = `<h2>Grand Total: <strong>$${total.toFixed(2)}</strong></h2>`;
 }
 
-document.getElementById("proceed-to-checkout").addEventListener("click", () => {
-    document.getElementById("cart").style.display = "none";
-    document.getElementById("checkout").style.display = "block";
-    renderCheckout();
-});
+function updateCartQuantity(index, quantity) {
+    const q = parseInt(quantity);
+    if (q > 0) {
+        cart[index].quantity = q;
+        renderCart();
+    } else {
+        removeFromCart(index);
+    }
+}
 
-document.getElementById("process-order").addEventListener("click", () => {
-    alert("Order processed successfully!");
-    cart.length = 0;
+function removeFromCart(index) {
+    const removedItem = cart[index];
+    cart.splice(index, 1);
     renderCart();
-    document.getElementById("checkout").style.display = "none";
-    document.getElementById("products").style.display = "block";
-});
+}
 
+// ========== CHECKOUT SECTION ==========
 function renderCheckout() {
     const orderSummary = document.getElementById("order-summary");
     orderSummary.innerHTML = "";
+    
+    if (cart.length === 0) {
+        orderSummary.innerHTML = "<p class='empty-checkout'>No items to checkout. <a href='#products' onclick='navigateTo(\"products\")'>Continue Shopping</a></p>";
+        return;
+    }
+    
+    let total = 0;
+    const summaryDiv = document.createElement("div");
+    summaryDiv.className = "checkout-summary";
+    
     cart.forEach(item => {
+        const itemTotal = item.price * item.quantity;
         const orderItem = document.createElement("div");
-        orderItem.className = "cart-item";
+        orderItem.className = "order-item";
         orderItem.innerHTML = `
-            <h2>${item.emoji} ${item.name}</h2>
-            <p>Quantity: ${item.quantity}</p>
-            <p>Total: $${(item.price * item.quantity).toFixed(2)}</p>
+            <h3>${item.emoji} ${item.name}</h3>
+            <p class="order-details">Quantity: ${item.quantity} × $${item.price.toFixed(2)}</p>
+            <p class="order-subtotal">$${itemTotal.toFixed(2)}</p>
         `;
-        orderSummary.appendChild(orderItem);
+        summaryDiv.appendChild(orderItem);
+        total += itemTotal;
     });
+    
+    const totalDiv = document.createElement("div");
+    totalDiv.className = "order-total";
+    totalDiv.innerHTML = `<h2>Order Total: <strong>$${total.toFixed(2)}</strong></h2>`;
+    summaryDiv.appendChild(totalDiv);
+    
+    orderSummary.appendChild(summaryDiv);
 }
+
+// ========== EVENT LISTENERS ==========
+document.addEventListener("DOMContentLoaded", () => {
+    // Initial renders
+    renderProducts();
+    renderCart();
+    
+    // Navigation click handlers
+    document.querySelectorAll("nav a").forEach(link => {
+        link.addEventListener("click", (e) => {
+            e.preventDefault();
+            const section = link.getAttribute("href").substring(1);
+            if (section === "cart") {
+                renderCart();
+            } else if (section === "checkout") {
+                renderCheckout();
+            }
+            navigateTo(section);
+        });
+    });
+    
+    // Proceed to checkout button
+    document.getElementById("proceed-to-checkout").addEventListener("click", () => {
+        if (cart.length > 0) {
+            renderCheckout();
+            navigateTo("checkout");
+        }
+    });
+    
+    // Process order button
+    document.getElementById("process-order").addEventListener("click", () => {
+        alert("Order processed successfully!");
+        cart.length = 0;
+        renderProducts();
+        renderCart();
+        navigateTo("products");
+    });
+});
