@@ -1,13 +1,13 @@
-## ProductDetails Page
+## Products Page
 ```
 +---------------------------------------------+
 | Navigation Bar                              |
 +---------------------------------------------+
-| Product Name: 🍎 Apples                     |
-| Description: Fresh, crisp red apples        |
-| Price: $2.99 per pound                      |
-| Quantity Selector: [ - ] [ 1 ] [ + ]       |
-| [Add to Cart] [Back to Products]           |
+| Product Grid:                               |
+| [🍎 Apples] [🍌 Bananas] [🍊 Oranges]         |
+| [🍓 Strawberries] [🍇 Grapes] [🥝 Kiwis]      |
+| [🍑 Peaches] [🍈 Melons] [🫐 Blueberries]     |
+| [🍋 Lemons]                                 |
 +---------------------------------------------+
 | Footer                                     |
 +---------------------------------------------+
